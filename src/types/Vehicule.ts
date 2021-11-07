@@ -6,7 +6,7 @@ interface Vehicule {
   ExtensionData: any;
   Id: string;
   Name: string;
-  ModelName: string;
+  ModelName: number;
   Immat: string;
   EnergyLevel: number;
   Position: {

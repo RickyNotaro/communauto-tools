@@ -1,14 +1,20 @@
 <template>
   <div class="radar">
-    <img alt="Vue logo" src="../assets/logo.png">
-
+    <vehicule-list></vehicule-list>
   </div>
 </template>
 
 <script>
-export default {
 
-};
+import { Options, Vue } from 'vue-class-component';
+import VehiculeList from '@/components/VehiculesList.vue'; // @ is an alias to /src
+
+@Options({
+  components: {
+    VehiculeList,
+  },
+})
+export default class Home extends Vue {}
 </script>
 
 <style>
