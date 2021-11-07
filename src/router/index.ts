@@ -15,7 +15,11 @@ const routes: Array<RouteRecordRaw> = [
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/About.vue'),
   },
-];
+  {
+    path: '/radar',
+    name: 'Radar',
+    component: () => import('../views/Radar.vue'),
+  }];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
