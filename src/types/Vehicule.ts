@@ -4,15 +4,15 @@ interface Vehicule {
   HasPromo: boolean;
   VehiculePromotions: Array<VehiclePromotion>;
   ExtensionData: any;
-  Id: string;
+  Id: any;
   Name: string;
   ModelName: number;
   Immat: string;
   EnergyLevel: number;
   Position: {
     ExtensionData: any;
-    Latitude: number;
-    Longitude: number;
+    Lat: number;
+    Lon: number;
   };
 }
 
