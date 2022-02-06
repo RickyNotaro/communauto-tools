@@ -1,5 +1,5 @@
 <template>
-  <div class="radar">
+  <div class="VehiculeList">
     <vehicule-list></vehicule-list>
   </div>
 </template>
@@ -7,11 +7,11 @@
 <script>
 
 import { Options, Vue } from 'vue-class-component';
-import Radar from '@/components/Radar.vue'; // @ is an alias to /src
+import VehiculeList from '@/components/VehiculesList.vue'; // @ is an alias to /src
 
 @Options({
   components: {
-    Radar,
+    VehiculeList,
   },
 })
 export default class Home extends Vue {}
