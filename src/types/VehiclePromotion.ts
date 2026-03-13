@@ -1,7 +1,5 @@
-interface VehiclePromotion {
+export interface VehiclePromotion {
   VehiculePromotionType: number;
-  EndDate: string;
+  EndDate: string | null;
   PriorityOrder: number;
 }
-
-export default VehiclePromotion;

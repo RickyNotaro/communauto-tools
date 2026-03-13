@@ -1,12 +1,11 @@
-/* eslint-disable class-methods-use-this */
 import http from '@/http-common';
-// API URL : https://www.reservauto.net/WCF/LSI/Cache/LSIBookingService.svc/GetVehicleProposals?CustomerID=&Longitude=-73.5870264&Latitude=45.4765368&_=1636259690470
 
-class CommunautoDataService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getVehicleProposals() : Promise<any> {
-    return http.get('/WCF/LSI/Cache/LSIBookingService.svc/GetVehicleProposals');
+// https://www.reservauto.net/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=1
+// BranchID (1=Quebec), LanguageID (1=EN, 2=FR), CityID (e.g. 59=Montreal)
+export function getAvailableVehicles(branchId = 1, languageId = 2, cityId?: number) {
+  const params: Record<string, number> = { BranchID: branchId, LanguageID: languageId };
+  if (cityId !== undefined) {
+    params.CityID = cityId;
   }
+  return http.get('/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles', { params });
 }
-
-export default new CommunautoDataService();
