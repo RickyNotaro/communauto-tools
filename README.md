@@ -1,34 +1,40 @@
 # communauto-tools
 
-## Project setup
+Browse available Communauto (car-sharing) vehicles in Montreal via the ReserveAuto API.
+
+- **Véhicules** — List all available vehicles, sort by distance from your location, filter by radius
+- **Radar** — OpenStreetMap view with vehicle markers and your position
+
+## Stack
+
+Vue 3.5 · TypeScript 5 · Vite 6 · Leaflet · Axios · Bootstrap 5
+
+## Setup
+
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Development
+
 ```
-npm run serve
+npm run dev
 ```
 
-### Compiles and minifies for production
+### Build for production
+
 ```
 npm run build
 ```
 
-### Run your unit tests
+### Preview production build
+
 ```
-npm run test:unit
+npm run preview
 ```
 
-### Run your end-to-end tests
-```
-npm run test:e2e
-```
+### Lint
 
-### Lints and fixes files
 ```
 npm run lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
