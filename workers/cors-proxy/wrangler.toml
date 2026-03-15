@@ -1,0 +1,7 @@
+name = "communauto-cors-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+[vars]
+ALLOWED_ORIGIN = "https://rickynotaro.github.io"
+TARGET_HOST = "https://www.reservauto.net"

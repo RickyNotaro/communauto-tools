@@ -1,0 +1,13 @@
+{
+  "name": "communauto-cors-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241018.0",
+    "wrangler": "^3.80.0"
+  }
+}
