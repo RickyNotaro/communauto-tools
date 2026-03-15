@@ -4,8 +4,8 @@ import { setRestApiToken, setWcfCookies } from '@/http-common';
 const TOKEN_KEY = 'communauto_access_token';
 const COOKIES_KEY = 'communauto_wcf_cookies';
 
-const accessToken = ref<string | null>(localStorage.getItem(TOKEN_KEY));
-const wcfCookies = ref<string | null>(localStorage.getItem(COOKIES_KEY));
+const accessToken = ref<string | null>(sessionStorage.getItem(TOKEN_KEY));
+const wcfCookies = ref<string | null>(sessionStorage.getItem(COOKIES_KEY));
 
 const isAuthenticated = computed(() => !!wcfCookies.value || !!accessToken.value);
 
@@ -17,19 +17,19 @@ interface LoginCredentials {
 function login(creds: LoginCredentials) {
   if (creds.accessToken?.trim()) {
     accessToken.value = creds.accessToken.trim();
-    localStorage.setItem(TOKEN_KEY, accessToken.value);
+    sessionStorage.setItem(TOKEN_KEY, accessToken.value);
   }
   if (creds.cookies?.trim()) {
     wcfCookies.value = creds.cookies.trim();
-    localStorage.setItem(COOKIES_KEY, wcfCookies.value);
+    sessionStorage.setItem(COOKIES_KEY, wcfCookies.value);
   }
 }
 
 function logout() {
   accessToken.value = null;
   wcfCookies.value = null;
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(COOKIES_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(COOKIES_KEY);
 }
 
 // Sync tokens to axios whenever they change

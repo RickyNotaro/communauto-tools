@@ -220,13 +220,14 @@ async function checkCurrentBooking() {
 const selected = ref<VehicleWithDistance | null>(null);
 const carDetails = ref<any>(null);
 const loadingDetails = ref(false);
+let detailsRequestId = 0;
 
-watch(selected, async (v) => {
-  carDetails.value = null;
-  if (!v || !isAuthenticated.value) return;
+async function fetchCarDetails(v: VehicleWithDistance) {
+  const requestId = ++detailsRequestId;
   loadingDetails.value = true;
   try {
     const res = await getCarDetails(v.CarId);
+    if (requestId !== detailsRequestId) return; // stale response
     const data = res.data?.d ?? res.data;
     if (data?.Success && data.Car) {
       carDetails.value = data.Car;
@@ -234,8 +235,16 @@ watch(selected, async (v) => {
   } catch {
     // ignore — unauthenticated or endpoint unavailable
   } finally {
-    loadingDetails.value = false;
+    if (requestId === detailsRequestId) {
+      loadingDetails.value = false;
+    }
   }
+}
+
+watch(selected, (v) => {
+  carDetails.value = null;
+  if (!v || !isAuthenticated.value) return;
+  fetchCarDetails(v);
 });
 const sortKey = ref<'distance' | 'name' | 'energy' | 'brand'>('distance');
 const maxDistance = ref<number | null>(null);
@@ -297,6 +306,20 @@ function bookingStatusLabel(status: number): string {
     default: return `Inconnu (${status})`;
   }
 }
+
+// Re-check booking and reload car details when user logs in after mount
+watch(isAuthenticated, (authed) => {
+  if (authed) {
+    checkCurrentBooking();
+    // Reload details for already-selected vehicle
+    if (selected.value) {
+      fetchCarDetails(selected.value);
+    }
+  } else {
+    currentBooking.value = null;
+    carDetails.value = null;
+  }
+});
 
 onMounted(() => {
   fetchVehicles();

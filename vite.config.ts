@@ -18,9 +18,14 @@ export default defineConfig({
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq, req) => {
             // Convert X-WCF-Cookie header to actual Cookie header
-            const wcfCookie = req.headers['x-wcf-cookie'];
+            let wcfCookie = req.headers['x-wcf-cookie'];
             if (wcfCookie) {
-              proxyReq.setHeader('Cookie', wcfCookie as string);
+              // Normalize: handle string arrays, strip leading "cookie:" prefix from DevTools paste
+              const raw = Array.isArray(wcfCookie) ? wcfCookie.join('; ') : wcfCookie;
+              const cleaned = raw.replace(/^cookie:\s*/i, '').trim();
+              if (cleaned) {
+                proxyReq.setHeader('Cookie', cleaned);
+              }
               proxyReq.removeHeader('x-wcf-cookie');
             }
           });

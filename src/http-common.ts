@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-// Public API client — proxied through Vite in dev
+// Public API client — proxied through Vite in dev.
+// Note: WCF cookie conversion only works in dev via the Vite proxy; authenticated
+// WCF calls are not supported in the static production build.
 const apiClient = axios.create({
   baseURL: import.meta.env.DEV ? '/api' : 'https://www.reservauto.net',
   headers: {

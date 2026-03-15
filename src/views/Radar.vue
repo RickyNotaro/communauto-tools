@@ -149,6 +149,7 @@ function clearRefreshTimer() {
 const autoBookActive = ref(false);
 const autoBookError = ref<string | null>(null);
 const autoBookSuccess = ref<string | null>(null);
+let autoBookInProgress = false;
 
 function getUidFromCookies(): number | null {
   const match = wcfCookies.value?.match(/uid=(\d+)/);
@@ -173,6 +174,16 @@ function stopAutoBook() {
 }
 
 async function tryAutoBook() {
+  if (!autoBookActive.value || autoBookInProgress) return;
+  autoBookInProgress = true;
+  try {
+    await _tryAutoBookImpl();
+  } finally {
+    autoBookInProgress = false;
+  }
+}
+
+async function _tryAutoBookImpl() {
   if (!autoBookActive.value) return;
   const cars = vehiclesInRadius.value;
   if (cars.length === 0) return;
@@ -274,7 +285,11 @@ async function loadZones() {
           });
         }
       },
-    }).addTo(map);
+    });
+    // Only add to map if the checkbox is still checked
+    if (showZones.value) {
+      zonesLayer.addTo(map);
+    }
   } catch {
     // zones are optional
   }

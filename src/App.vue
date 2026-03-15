@@ -14,11 +14,11 @@
   </div>
 
   <div v-if="showTokenModal" class="modal-backdrop" @click.self="showTokenModal = false">
-    <div class="modal-box">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-label="Connexion">
       <h5>Connexion</h5>
       <p class="text-muted small">
         1. Connectez-vous sur
-        <a href="https://www.reservauto.net" target="_blank">reservauto.net</a><br>
+        <a href="https://www.reservauto.net" target="_blank" rel="noopener noreferrer">reservauto.net</a><br>
         2. DevTools (F12) &rarr; Application &rarr; Cookies &rarr; <code>www.reservauto.net</code><br>
         3. Clic droit sur un cookie &rarr; <strong>Copy all cookies</strong> (ou copiez la ligne <code>cookie:</code> d'une requête dans Network)
       </p>
@@ -34,7 +34,7 @@
       <details class="mb-3">
         <summary class="small text-muted">REST API token (optionnel)</summary>
         <p class="text-muted small mt-1">
-          Sur <a href="https://quebec.client.reservauto.net" target="_blank">quebec.client.reservauto.net</a>
+          Sur <a href="https://quebec.client.reservauto.net" target="_blank" rel="noopener noreferrer">quebec.client.reservauto.net</a>
           &rarr; Local Storage &rarr; clé <code>oidc.user:</code> &rarr; <code>access_token</code>
         </p>
         <textarea v-model="tokenInput" class="form-control form-control-sm" rows="2" placeholder="access_token (optionnel)"></textarea>
