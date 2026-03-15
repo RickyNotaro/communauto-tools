@@ -38,3 +38,34 @@ npm run preview
 ```
 npm run lint
 ```
+
+## CORS Proxy (Cloudflare Worker)
+
+The production build uses a Cloudflare Worker to proxy requests to the ReserveAuto API with CORS headers.
+
+### Setup
+
+```bash
+cd workers/cors-proxy
+npm install
+```
+
+### Local development
+
+```bash
+npm run dev
+```
+
+### Deploy
+
+```bash
+npm run deploy
+```
+
+After deploying, set `VITE_CORS_PROXY_URL` in your `.env.production` to your worker URL:
+
+```
+VITE_CORS_PROXY_URL=https://communauto-cors-proxy.<your-subdomain>.workers.dev
+```
+
+The worker allows configuring `ALLOWED_ORIGIN` (comma-separated) and `TARGET_HOST` via `wrangler.toml` or the Cloudflare dashboard.

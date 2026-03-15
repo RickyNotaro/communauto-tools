@@ -1,10 +1,8 @@
 import axios from 'axios';
 
-// Public API client — proxied through Vite in dev.
-// Note: WCF cookie conversion only works in dev via the Vite proxy; authenticated
-// WCF calls are not supported in the static production build.
+// Public API client — proxied through Vite in dev, Cloudflare Worker in prod.
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : 'https://corsproxy.io/?url=https://www.reservauto.net',
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_CORS_PROXY_URL || 'https://communauto-cors-proxy.<your-subdomain>.workers.dev'),
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
