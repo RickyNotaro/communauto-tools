@@ -11,8 +11,62 @@
           <input v-model.number="radius" type="range" class="form-range" min="100" max="5000" step="100">
         </div>
 
+        <div class="form-check mb-2">
+          <input v-model="showZones" class="form-check-input" type="checkbox" id="showZones">
+          <label class="form-check-label" for="showZones">Zones Flex</label>
+        </div>
+
         <div class="mb-2 text-muted">
           {{ vehiclesInRadius.length }} véhicule{{ vehiclesInRadius.length > 1 ? 's' : '' }} dans le rayon
+        </div>
+
+        <!-- Auto-refresh -->
+        <div class="mb-3">
+          <label class="form-label small">Rafraîchissement</label>
+          <div class="d-flex gap-1 flex-wrap">
+            <button
+              v-for="s in refreshOptions"
+              :key="s"
+              class="btn btn-sm"
+              :class="refreshInterval === s ? 'btn-primary' : 'btn-outline-secondary'"
+              @click="setRefreshInterval(s)"
+            >
+              {{ s }}s
+            </button>
+            <button
+              class="btn btn-sm"
+              :class="refreshInterval === 0 ? 'btn-primary' : 'btn-outline-secondary'"
+              @click="setRefreshInterval(0)"
+            >
+              Off
+            </button>
+          </div>
+          <div v-if="refreshInterval > 0" class="text-muted small mt-1">
+            Prochain refresh dans {{ refreshCountdown }}s
+          </div>
+        </div>
+
+        <!-- Auto-book -->
+        <div v-if="isAuthenticated" class="mb-3">
+          <button
+            v-if="!autoBookActive"
+            class="btn btn-warning btn-sm w-100"
+            @click="startAutoBook"
+          >
+            Auto-réserver ({{ radius }} m)
+          </button>
+          <button
+            v-else
+            class="btn btn-danger btn-sm w-100"
+            @click="stopAutoBook"
+          >
+            Arrêter auto-réservation
+          </button>
+          <div v-if="autoBookActive" class="text-muted small mt-1">
+            En attente d'un véhicule dans {{ radius }} m...
+          </div>
+          <div v-if="autoBookError" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2 small">{{ autoBookError }}</div>
+          <div v-if="autoBookSuccess" class="alert alert-success alert-sm mt-1 mb-0 py-1 px-2 small">{{ autoBookSuccess }}</div>
         </div>
 
         <div class="list-group list-group-flush" style="max-height: 60vh; overflow-y: auto">
@@ -40,14 +94,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGeolocation } from '@/composables/useGeolocation';
 import { useVehicles, type VehicleWithDistance } from '@/composables/useVehicles';
+import { useAuth } from '@/composables/useAuth';
+import { getLSIZones, createBooking } from '@/services/communautoDataService';
 
 const { userLocation, locationError, locating } = useGeolocation();
 const { vehiclesWithDistance, fetchVehicles } = useVehicles(userLocation);
+const { isAuthenticated, wcfCookies } = useAuth();
 
 const radius = ref(1000);
 const selected = ref<VehicleWithDistance | null>(null);
@@ -57,7 +114,120 @@ let map: L.Map | null = null;
 let userMarker: L.CircleMarker | null = null;
 let radiusCircle: L.Circle | null = null;
 let vehicleMarkers: L.CircleMarker[] = [];
+let zonesLayer: L.GeoJSON | null = null;
+const showZones = ref(true);
 
+// --- Auto-refresh ---
+const refreshOptions = [15, 30, 60, 90];
+const refreshInterval = ref(0);
+const refreshCountdown = ref(0);
+let refreshTimer: ReturnType<typeof setInterval> | null = null;
+
+function setRefreshInterval(seconds: number) {
+  refreshInterval.value = seconds;
+  clearRefreshTimer();
+  if (seconds > 0) {
+    refreshCountdown.value = seconds;
+    refreshTimer = setInterval(() => {
+      refreshCountdown.value--;
+      if (refreshCountdown.value <= 0) {
+        refreshCountdown.value = seconds;
+        fetchVehicles();
+      }
+    }, 1000);
+  }
+}
+
+function clearRefreshTimer() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+}
+
+// --- Auto-book ---
+const autoBookActive = ref(false);
+const autoBookError = ref<string | null>(null);
+const autoBookSuccess = ref<string | null>(null);
+let autoBookInProgress = false;
+
+function getUidFromCookies(): number | null {
+  const match = wcfCookies.value?.match(/uid=(\d+)/);
+  return match ? parseInt(match[1]) : null;
+}
+
+async function startAutoBook() {
+  autoBookError.value = null;
+  autoBookSuccess.value = null;
+  autoBookActive.value = true;
+  // Enable refresh if not already running
+  if (refreshInterval.value === 0) {
+    setRefreshInterval(15);
+  }
+  // Refresh and try immediately
+  await fetchVehicles();
+  await tryAutoBook();
+}
+
+function stopAutoBook() {
+  autoBookActive.value = false;
+}
+
+async function tryAutoBook() {
+  if (!autoBookActive.value || autoBookInProgress) return;
+  autoBookInProgress = true;
+  try {
+    await _tryAutoBookImpl();
+  } finally {
+    autoBookInProgress = false;
+  }
+}
+
+async function _tryAutoBookImpl() {
+  if (!autoBookActive.value) return;
+  const cars = vehiclesInRadius.value;
+  if (cars.length === 0) return;
+
+  const uid = getUidFromCookies();
+  if (!uid) {
+    autoBookError.value = 'uid introuvable dans les cookies';
+    autoBookActive.value = false;
+    return;
+  }
+
+  // Try each car in radius (closest first), skip if booking limit reached
+  for (const car of cars) {
+    try {
+      const res = await createBooking(uid, car.CarId);
+      const data = res.data?.d ?? res.data;
+      if (data?.Success) {
+        autoBookSuccess.value = `Réservé: #${car.CarNo} — ${car.CarBrand} ${car.CarModel} (${Math.round(car.distance)} m)`;
+        autoBookActive.value = false;
+        return;
+      }
+      // Booking limit reached on this car — try next one
+      if (data?.ErrorType === 3) {
+        autoBookError.value = `#${car.CarNo} limite atteinte, essai suivant...`;
+        continue;
+      }
+      // Other error — stop
+      autoBookError.value = data?.ErrorMessage || 'Réservation échouée';
+      return;
+    } catch (e: any) {
+      autoBookError.value = e?.message || 'Erreur réseau';
+      return;
+    }
+  }
+  // All cars in radius had booking limit reached
+  autoBookError.value = 'Limite atteinte sur tous les véhicules dans le rayon';
+}
+
+// Attempt auto-book whenever vehicle list updates
+watch(vehiclesWithDistance, () => {
+  if (autoBookActive.value) tryAutoBook();
+});
+
+// --- Map ---
 const vehiclesInRadius = computed(() =>
   vehiclesWithDistance.value
     .filter((v) => v.distance <= radius.value)
@@ -89,6 +259,40 @@ function initMap() {
     fillOpacity: 0.08,
     weight: 1,
   }).addTo(map);
+}
+
+async function loadZones() {
+  if (!map) return;
+  try {
+    const res = await getLSIZones();
+    const geojson = res.data;
+    zonesLayer = L.geoJSON(geojson, {
+      style: (feature) => {
+        const fill = feature?.properties?.style?.fillColor || '4285F4';
+        return {
+          fillColor: `#${fill}`,
+          color: `#${fill}`,
+          weight: 1.5,
+          fillOpacity: 0.12,
+          dashArray: '4 4',
+        };
+      },
+      onEachFeature: (feature, layer) => {
+        if (feature.properties?.name) {
+          layer.bindTooltip(feature.properties.name, {
+            sticky: true,
+            className: 'zone-tooltip',
+          });
+        }
+      },
+    });
+    // Only add to map if the checkbox is still checked
+    if (showZones.value) {
+      zonesLayer.addTo(map);
+    }
+  } catch {
+    // zones are optional
+  }
 }
 
 function updateMapMarkers() {
@@ -124,7 +328,6 @@ function selectVehicle(v: VehicleWithDistance) {
   selected.value = v;
   if (map) {
     map.panTo([v.Latitude, v.Longitude]);
-    // Find and open the matching marker popup
     const marker = vehicleMarkers.find((m) => {
       const pos = m.getLatLng();
       return pos.lat === v.Latitude && pos.lng === v.Longitude;
@@ -152,10 +355,22 @@ watch(locating, (isLocating) => {
 // Redraw vehicle markers when data changes
 watch(vehiclesWithDistance, () => updateMapMarkers());
 
+// Toggle zones visibility
+watch(showZones, (show) => {
+  if (!map || !zonesLayer) return;
+  if (show) zonesLayer.addTo(map);
+  else zonesLayer.remove();
+});
+
 onMounted(async () => {
   await fetchVehicles();
   await nextTick();
   initMap();
   updateMapMarkers();
+  loadZones();
+});
+
+onUnmounted(() => {
+  clearRefreshTimer();
 });
 </script>
