@@ -20,6 +20,12 @@
           <br class="d-none d-md-inline" />
           Une interface rapide et intuitive pour le service d'autopartage.
         </p>
+        <div class="hero-notice">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          Fonctionne uniquement en local (<code>npm run dev</code>) — Communauto bloque les requêtes via Cloudflare Workers / corsproxy.io.
+        </div>
         <div class="hero-actions">
           <router-link to="/vehicules" class="btn btn-light btn-lg me-3">
             <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
@@ -168,6 +174,26 @@
   opacity: 0.92;
   line-height: 1.7;
   margin-bottom: 2.2rem;
+}
+
+.hero-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+
+  code {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
 }
 
 .hero-actions {

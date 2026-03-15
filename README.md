@@ -4,6 +4,8 @@
 
 Communauto Tools is a fast, lightweight web app that connects to the ReserveAuto API to give you a better experience finding and reserving Communauto vehicles.
 
+> **Note:** This app currently only works locally (`npm run dev`). Communauto's API blocks requests from Cloudflare Workers and corsproxy.io, so the production/hosted build cannot reach the ReserveAuto endpoints. The Vite dev server proxy works fine for local development.
+
 ## Features
 
 ### Vehicle List
