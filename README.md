@@ -14,6 +14,8 @@ Communauto Tools is a fast, lightweight web app that connects to the ReserveAuto
 - Filter by radius (0–5 km from your location)
 - One-click booking and cancellation
 
+![Véhicules Libres](public/libre.png)
+
 ### Radar (Map View)
 - Interactive **OpenStreetMap** with vehicle markers
 - See your current position and configurable search radius
@@ -21,6 +23,8 @@ Communauto Tools is a fast, lightweight web app that connects to the ReserveAuto
 - Flex zone overlay (GeoJSON)
 - **Auto-refresh** (15–90 s intervals)
 - **Auto-book** — automatically reserve the first vehicle that appears in your radius
+
+![Radar](public/radar.png)
 
 ### Authentication
 - Connects with your ReserveAuto session cookies
