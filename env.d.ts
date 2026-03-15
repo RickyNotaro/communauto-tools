@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_CORS_PROXY_URL?: string;
+  // no custom env vars needed — production uses corsproxy.io
 }
 
 declare module '*.vue' {
