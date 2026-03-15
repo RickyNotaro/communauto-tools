@@ -1,13 +1,30 @@
 import axios from 'axios';
 
-// Public API client — proxied through Vite in dev, Cloudflare Worker in prod.
+const TARGET_BASE = 'https://www.reservauto.net';
+
+// Public API client — proxied through Vite in dev, corsproxy.io in prod.
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_CORS_PROXY_URL || 'https://communauto-cors-proxy.<your-subdomain>.workers.dev'),
+  baseURL: import.meta.env.DEV ? '/api' : TARGET_BASE,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
 });
+
+if (!import.meta.env.DEV) {
+  apiClient.interceptors.request.use((config) => {
+    const targetUrl = new URL(config.url!, TARGET_BASE);
+    if (config.params) {
+      for (const [k, v] of Object.entries(config.params as Record<string, unknown>)) {
+        if (v !== undefined && v !== null) targetUrl.searchParams.set(k, String(v));
+      }
+      config.params = undefined;
+    }
+    config.baseURL = '';
+    config.url = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl.toString())}`;
+    return config;
+  });
+}
 
 // Authenticated REST API client — direct to restapifrontoffice
 const restApi = axios.create({
