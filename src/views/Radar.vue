@@ -16,6 +16,28 @@
           <label class="form-check-label" for="showZones">Zones Flex</label>
         </div>
 
+        <!-- Electric filter -->
+        <div class="mb-2">
+          <label class="form-label small">Type de véhicule</label>
+          <div class="btn-group btn-group-sm w-100">
+            <button
+              class="btn"
+              :class="electricFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary'"
+              @click="electricFilter = 'all'"
+            >Tous</button>
+            <button
+              class="btn"
+              :class="electricFilter === 'electric' ? 'btn-success' : 'btn-outline-secondary'"
+              @click="electricFilter = 'electric'"
+            >Électrique</button>
+            <button
+              class="btn"
+              :class="electricFilter === 'gas' ? 'btn-warning' : 'btn-outline-secondary'"
+              @click="electricFilter = 'gas'"
+            >Essence</button>
+          </div>
+        </div>
+
         <div class="mb-2 text-muted">
           {{ vehiclesInRadius.length }} véhicule{{ vehiclesInRadius.length > 1 ? 's' : '' }} dans le rayon
         </div>
@@ -107,6 +129,7 @@ const { vehiclesWithDistance, fetchVehicles } = useVehicles(userLocation);
 const { isAuthenticated, wcfCookies } = useAuth();
 
 const radius = ref(1000);
+const electricFilter = ref<'all' | 'electric' | 'gas'>('all');
 const selected = ref<VehicleWithDistance | null>(null);
 const mapContainer = ref<HTMLElement | null>(null);
 
@@ -231,6 +254,7 @@ watch(vehiclesWithDistance, () => {
 const vehiclesInRadius = computed(() =>
   vehiclesWithDistance.value
     .filter((v) => v.distance <= radius.value)
+    .filter((v) => electricFilter.value === 'all' || (electricFilter.value === 'electric' ? v.IsElectric : !v.IsElectric))
     .sort((a, b) => a.distance - b.distance)
 );
 
@@ -302,7 +326,11 @@ function updateMapMarkers() {
   vehicleMarkers.forEach((m) => m.remove());
   vehicleMarkers = [];
 
-  for (const v of vehiclesWithDistance.value) {
+  const filtered = vehiclesWithDistance.value.filter((v) =>
+    electricFilter.value === 'all' || (electricFilter.value === 'electric' ? v.IsElectric : !v.IsElectric)
+  );
+
+  for (const v of filtered) {
     const inRadius = v.distance <= radius.value;
     const marker = L.circleMarker([v.Latitude, v.Longitude], {
       radius: 6,
@@ -352,8 +380,8 @@ watch(locating, (isLocating) => {
   }
 });
 
-// Redraw vehicle markers when data changes
-watch(vehiclesWithDistance, () => updateMapMarkers());
+// Redraw vehicle markers when data or filter changes
+watch([vehiclesWithDistance, electricFilter], () => updateMapMarkers());
 
 // Toggle zones visibility
 watch(showZones, (show) => {
