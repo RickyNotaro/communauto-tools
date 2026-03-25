@@ -19,6 +19,11 @@ const router = createRouter({
       name: 'Radar',
       component: () => import('../views/Radar.vue'),
     },
+    {
+      path: '/signin-callback',
+      name: 'SigninCallback',
+      component: () => import('../views/SigninCallback.vue'),
+    },
   ],
 });
 
