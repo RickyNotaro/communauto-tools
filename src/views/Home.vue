@@ -5,7 +5,7 @@
       <div class="hero-content">
         <div class="hero-icon">
           <svg viewBox="0 0 64 64" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="64" height="64" rx="16" fill="#198754" />
+            <rect width="64" height="64" rx="16" fill="#0d6efd" />
             <path d="M16 38c0-6 4-14 16-18 12 4 16 12 16 18" stroke="#fff" stroke-width="3" stroke-linecap="round" />
             <circle cx="24" cy="40" r="5" stroke="#fff" stroke-width="2.5" />
             <circle cx="40" cy="40" r="5" stroke="#fff" stroke-width="2.5" />
@@ -147,7 +147,7 @@
 
 /* ── Hero ─────────────────────────────────────────── */
 .hero {
-  background: linear-gradient(135deg, #198754 0%, #0d6e3f 50%, #0a5c34 100%);
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #084298 100%);
   color: #fff;
   padding: 5rem 1.5rem 4rem;
   margin-top: -8px;
@@ -210,7 +210,7 @@
   }
 
   .btn-light {
-    color: #198754;
+    color: #0d6efd;
   }
 }
 
@@ -260,8 +260,8 @@
   margin-bottom: 1.25rem;
 
   &--list {
-    background: #e8f5e9;
-    color: #198754;
+    background: #e3f2fd;
+    color: #0d6efd;
   }
 
   &--map {
@@ -306,7 +306,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #198754;
+  background: #0d6efd;
   color: #fff;
   font-weight: 700;
   font-size: 1.1rem;
@@ -356,7 +356,7 @@
   font-size: 0.9rem;
 
   a {
-    color: #198754;
+    color: #0d6efd;
     text-decoration: none;
     font-weight: 600;
 
