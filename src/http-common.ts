@@ -6,18 +6,22 @@ const TARGET_BASE = 'https://www.reservauto.net';
 // The extension injects CORS headers + cookies via declarativeNetRequest,
 // so we can call the API directly without a proxy.
 let extensionDetected = false;
+let detectionDone = false;
 
-async function detectExtension(): Promise<boolean> {
-  try {
-    const resp = await fetch(
-      `${TARGET_BASE}/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=2`,
-      { method: 'HEAD', mode: 'cors' },
-    );
-    return resp.ok;
-  } catch {
-    return false;
-  }
-}
+const detectionPromise = !import.meta.env.DEV
+  ? (async () => {
+      try {
+        const resp = await fetch(
+          `${TARGET_BASE}/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=2`,
+          { method: 'HEAD', mode: 'cors' },
+        );
+        extensionDetected = resp.ok;
+      } catch {
+        extensionDetected = false;
+      }
+      detectionDone = true;
+    })()
+  : Promise.resolve();
 
 // Public API client — proxied through Vite in dev, direct with extension, corsproxy.io as fallback.
 const apiClient = axios.create({
@@ -29,8 +33,10 @@ const apiClient = axios.create({
 });
 
 if (!import.meta.env.DEV) {
-  // In production, use corsproxy.io as default, but skip if extension is detected
-  apiClient.interceptors.request.use((config) => {
+  // In production, wait for extension detection then decide proxy vs direct
+  apiClient.interceptors.request.use(async (config) => {
+    if (!detectionDone) await detectionPromise;
+
     if (extensionDetected) {
       // Extension handles CORS + cookies — call API directly
       return config;
@@ -46,11 +52,6 @@ if (!import.meta.env.DEV) {
     config.baseURL = '';
     config.url = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl.toString())}`;
     return config;
-  });
-
-  // Detect extension on startup
-  detectExtension().then((detected) => {
-    extensionDetected = detected;
   });
 }
 
