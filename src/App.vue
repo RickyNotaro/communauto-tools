@@ -16,33 +16,55 @@
   <div v-if="showTokenModal" class="modal-backdrop" @click.self="showTokenModal = false">
     <div class="modal-box" role="dialog" aria-modal="true" aria-label="Connexion">
       <h5>Connexion</h5>
-      <p class="text-muted small">
-        1. Connectez-vous sur
-        <a href="https://www.reservauto.net" target="_blank" rel="noopener noreferrer">reservauto.net</a><br>
-        2. DevTools (F12) &rarr; Application &rarr; Cookies &rarr; <code>www.reservauto.net</code><br>
-        3. Clic droit sur un cookie &rarr; <strong>Copy all cookies</strong> (ou copiez la ligne <code>cookie:</code> d'une requête dans Network)
-      </p>
 
-      <label class="form-label small fw-bold">Cookies</label>
-      <textarea
-        v-model="cookiesInput"
-        class="form-control form-control-sm mb-3"
-        rows="3"
-        placeholder="cf_clearance=...; uid=446674; bid=1; mySession=0060f6fa-..."
-      ></textarea>
+      <div class="mb-3">
+        <p class="small mb-2"><strong>Via l'extension Chrome</strong></p>
+        <ol class="small text-muted mb-0">
+          <li>Installez l'extension <strong>Communauto Auth Bridge</strong></li>
+          <li>Connectez-vous sur
+            <a href="https://quebec.client.reservauto.net/bookCar" target="_blank" rel="noopener noreferrer">quebec.client.reservauto.net</a>
+          </li>
+          <li>Cliquez sur l'extension &rarr; <strong>Envoyer vers Communauto Tools</strong></li>
+        </ol>
+      </div>
+
+      <hr>
 
       <details class="mb-3">
-        <summary class="small text-muted">REST API token (optionnel)</summary>
-        <p class="text-muted small mt-1">
-          Sur <a href="https://quebec.client.reservauto.net" target="_blank" rel="noopener noreferrer">quebec.client.reservauto.net</a>
-          &rarr; Local Storage &rarr; clé <code>oidc.user:</code> &rarr; <code>access_token</code>
+        <summary class="small text-muted">Connexion manuelle (cookies)</summary>
+        <p class="text-muted small mt-2">
+          1. Connectez-vous sur
+          <a href="https://quebec.client.reservauto.net" target="_blank" rel="noopener noreferrer">quebec.client.reservauto.net</a><br>
+          2. DevTools (F12) &rarr; onglet <strong>Réseau</strong> (Network) &rarr; recharger la page (F5)<br>
+          3. Filtrer par <code>reservauto</code>, trouver la requête <code>CustomerSpaceLogin</code><br>
+          4. Onglet Cookies &rarr; <strong>Response Cookies</strong> &rarr; assembler les valeurs :
+          <code>uid=...; bid=1; mySession=...; cf_clearance=...</code>
         </p>
-        <textarea v-model="tokenInput" class="form-control form-control-sm" rows="2" placeholder="access_token (optionnel)"></textarea>
+
+        <label class="form-label small fw-bold">Cookies</label>
+        <textarea
+          v-model="cookiesInput"
+          class="form-control form-control-sm mb-3"
+          rows="3"
+          placeholder="cf_clearance=...; uid=446674; bid=1; mySession=0060f6fa-..."
+        ></textarea>
+
+        <details class="mb-2">
+          <summary class="small text-muted">REST API token (optionnel)</summary>
+          <p class="text-muted small mt-1">
+            Sur <a href="https://quebec.client.reservauto.net" target="_blank" rel="noopener noreferrer">quebec.client.reservauto.net</a>
+            &rarr; Local Storage &rarr; clé <code>oidc.user:</code> &rarr; <code>access_token</code>
+          </p>
+          <textarea v-model="tokenInput" class="form-control form-control-sm" rows="2" placeholder="access_token (optionnel)"></textarea>
+        </details>
+
+        <div class="d-flex gap-2 justify-content-end">
+          <button class="btn btn-primary btn-sm" :disabled="!cookiesInput.trim()" @click="submitToken">Connecter</button>
+        </div>
       </details>
 
-      <div class="d-flex gap-2 justify-content-end">
+      <div class="d-flex justify-content-end">
         <button class="btn btn-secondary btn-sm" @click="showTokenModal = false">Annuler</button>
-        <button class="btn btn-primary btn-sm" :disabled="!cookiesInput.trim()" @click="submitToken">Connecter</button>
       </div>
     </div>
   </div>
@@ -51,14 +73,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 
-const { isAuthenticated, login, logout } = useAuth();
+const { isAuthenticated, login, tryLoginFromHash, logout } = useAuth();
 
 const showTokenModal = ref(false);
 const tokenInput = ref('');
 const cookiesInput = ref('');
+
+onMounted(() => {
+  // Check if we arrived via extension redirect with credentials in the hash
+  tryLoginFromHash();
+});
 
 function submitToken() {
   login({
