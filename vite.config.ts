@@ -2,9 +2,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: '/communauto-tools/',
   plugins: [vue()],
+  define: mode === 'ext' ? { 'import.meta.env.VITE_NO_PROXY': JSON.stringify('true') } : {},
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -34,4 +35,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))

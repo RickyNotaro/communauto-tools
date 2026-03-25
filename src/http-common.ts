@@ -2,37 +2,55 @@ import axios from 'axios';
 
 const TARGET_BASE = 'https://www.reservauto.net';
 
+// VITE_NO_PROXY=true  →  skip Vite proxy in dev, behave like production
+const useDevProxy = import.meta.env.DEV && !import.meta.env.VITE_NO_PROXY;
+
 // Detect if the Communauto Auth Bridge extension is installed.
 // The extension injects CORS headers + cookies via declarativeNetRequest,
 // so we can call the API directly without a proxy.
 let extensionDetected = false;
+let detectionDone = useDevProxy; // skip detection when using Vite proxy
 
-async function detectExtension(): Promise<boolean> {
-  try {
-    const resp = await fetch(
-      `${TARGET_BASE}/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=2`,
-      { method: 'HEAD', mode: 'cors' },
-    );
-    return resp.ok;
-  } catch {
-    return false;
-  }
-}
+const detectionPromise = !useDevProxy
+  ? (async () => {
+      try {
+        // Simple GET with mode: 'cors' — if the extension is injecting
+        // Access-Control-Allow-Origin headers, this will succeed.
+        // Without the extension, it fails with a CORS error.
+        // cache: 'no-store' prevents a cached corsproxy.io response from
+        // giving a false positive.
+        const resp = await fetch(
+          `${TARGET_BASE}/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=2`,
+          { method: 'GET', mode: 'cors', cache: 'no-store' },
+        );
+        extensionDetected = resp.ok;
+      } catch {
+        extensionDetected = false;
+      }
+      detectionDone = true;
+    })()
+  : Promise.resolve();
 
-// Public API client — proxied through Vite in dev, direct with extension, corsproxy.io as fallback.
+// Public API client — uses extension (direct) > Vite proxy (dev) > corsproxy.io (prod fallback).
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : TARGET_BASE,
+  baseURL: useDevProxy ? '/api' : TARGET_BASE,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
 });
 
-if (!import.meta.env.DEV) {
-  // In production, use corsproxy.io as default, but skip if extension is detected
-  apiClient.interceptors.request.use((config) => {
+if (!useDevProxy) {
+  // Wait for extension detection, then fall back to corsproxy.io if needed
+  apiClient.interceptors.request.use(async (config) => {
+    if (!detectionDone) await detectionPromise;
+
     if (extensionDetected) {
-      // Extension handles CORS + cookies — call API directly
+      // Extension handles CORS + cookies via declarativeNetRequest.
+      // Remove headers that would trigger a CORS preflight — the server
+      // doesn't handle OPTIONS requests, so we must keep requests "simple".
+      delete config.headers['Content-Type'];
+      delete config.headers['X-WCF-Cookie'];
       return config;
     }
 
@@ -46,11 +64,6 @@ if (!import.meta.env.DEV) {
     config.baseURL = '';
     config.url = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl.toString())}`;
     return config;
-  });
-
-  // Detect extension on startup
-  detectExtension().then((detected) => {
-    extensionDetected = detected;
   });
 }
 
