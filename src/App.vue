@@ -83,8 +83,10 @@ const tokenInput = ref('');
 const cookiesInput = ref('');
 
 onMounted(() => {
-  // Check if we arrived via extension redirect with credentials in the hash
-  tryLoginFromHash();
+  // Only attempt hash-based login on the dedicated sign-in callback route
+  if (window.location.pathname.endsWith('/signin-callback')) {
+    tryLoginFromHash();
+  }
 });
 
 function submitToken() {

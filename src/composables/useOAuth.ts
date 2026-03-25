@@ -1,11 +1,3 @@
-export interface OAuthTokens {
-  access_token: string;
-  refresh_token?: string;
-  id_token?: string;
-  expires_in?: number;
-  token_type?: string;
-}
-
 export interface HashCredentials {
   cookies?: string;
   token?: string;
@@ -14,25 +6,26 @@ export interface HashCredentials {
 
 /**
  * Check if the current URL has credentials in the hash
- * (from browser extension redirect or bookmarklet).
- * Returns credentials if found, null otherwise. Clears the hash after reading.
+ * (from browser extension redirect).
+ * Returns credentials if found, null otherwise.
+ * Clears the hash whenever auth-related params are present.
  */
 export function checkHashForCredentials(): HashCredentials | null {
   const hash = window.location.hash;
   if (!hash || hash.length < 2) return null;
 
   const params = new URLSearchParams(hash.substring(1));
-  const cookies = params.get('cookies');
-  const token = params.get('token');
+  const cookies = params.get('cookies') || undefined;
+  const token = params.get('token') || undefined;
+  const refresh_token = params.get('refresh_token') || undefined;
+  const hasAuthParams = !!cookies || !!token || !!refresh_token || params.has('error');
 
-  if (!cookies && !token) return null;
+  if (!hasAuthParams) return null;
 
   // Clear the hash so credentials aren't visible in the URL
   history.replaceState(null, '', window.location.pathname + window.location.search);
 
-  return {
-    cookies: cookies || undefined,
-    token: token || undefined,
-    refresh_token: params.get('refresh_token') || undefined,
-  };
+  if (!cookies && !token && !refresh_token) return null;
+
+  return { cookies, token, refresh_token };
 }
