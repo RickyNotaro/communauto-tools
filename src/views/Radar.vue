@@ -332,9 +332,10 @@ function updateMapMarkers() {
 
   for (const v of filtered) {
     const inRadius = v.distance <= radius.value;
+    const activeColor = v.IsElectric ? '#0d6efd' : '#28a745';
     const marker = L.circleMarker([v.Latitude, v.Longitude], {
       radius: 6,
-      fillColor: inRadius ? '#28a745' : '#aaa',
+      fillColor: inRadius ? activeColor : '#aaa',
       color: '#fff',
       weight: 1,
       fillOpacity: inRadius ? 0.9 : 0.4,
