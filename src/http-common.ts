@@ -13,7 +13,7 @@ async function detectExtension(): Promise<boolean> {
       `${TARGET_BASE}/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=2`,
       { method: 'HEAD', mode: 'cors' },
     );
-    return resp.ok || resp.status === 0;
+    return resp.ok;
   } catch {
     return false;
   }

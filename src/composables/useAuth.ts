@@ -3,11 +3,9 @@ import { setRestApiToken, setWcfCookies } from '@/http-common';
 import { checkHashForCredentials } from '@/composables/useOAuth';
 
 const TOKEN_KEY = 'communauto_access_token';
-const REFRESH_TOKEN_KEY = 'communauto_refresh_token';
 const COOKIES_KEY = 'communauto_wcf_cookies';
 
 const accessToken = ref<string | null>(sessionStorage.getItem(TOKEN_KEY));
-const refreshToken = ref<string | null>(sessionStorage.getItem(REFRESH_TOKEN_KEY));
 const wcfCookies = ref<string | null>(sessionStorage.getItem(COOKIES_KEY));
 
 const isAuthenticated = computed(() => !!wcfCookies.value || !!accessToken.value);
@@ -30,10 +28,8 @@ function login(creds: LoginCredentials) {
 
 function logout() {
   accessToken.value = null;
-  refreshToken.value = null;
   wcfCookies.value = null;
   sessionStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
   sessionStorage.removeItem(COOKIES_KEY);
 }
 
@@ -52,10 +48,6 @@ function tryLoginFromHash(): boolean {
   if (creds.token) {
     accessToken.value = creds.token;
     sessionStorage.setItem(TOKEN_KEY, creds.token);
-  }
-  if (creds.refresh_token) {
-    refreshToken.value = creds.refresh_token;
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, creds.refresh_token);
   }
 
   return true;

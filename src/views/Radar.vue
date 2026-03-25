@@ -305,11 +305,11 @@ function updateMapMarkers() {
   for (const v of vehiclesWithDistance.value) {
     const inRadius = v.distance <= radius.value;
     const marker = L.circleMarker([v.Latitude, v.Longitude], {
-      radius: 9,
-      fillColor: '#f55d00',
+      radius: 6,
+      fillColor: inRadius ? '#28a745' : '#aaa',
       color: '#fff',
       weight: 1,
-      fillOpacity: inRadius ? 1 : 0.4,
+      fillOpacity: inRadius ? 0.9 : 0.4,
     }).addTo(map!);
 
     marker.bindPopup(
