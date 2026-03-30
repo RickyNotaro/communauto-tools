@@ -71,24 +71,24 @@
         <!-- Auto-book -->
         <div v-if="isAuthenticated" class="mb-3">
           <button
-            v-if="!autoBookActive"
+            v-if="!bgAutoBook.active.value"
             class="btn btn-warning btn-sm w-100"
-            @click="startAutoBook"
+            @click="handleStartAutoBook"
           >
             Auto-réserver ({{ radius }} m)
           </button>
           <button
             v-else
             class="btn btn-danger btn-sm w-100"
-            @click="stopAutoBook"
+            @click="bgAutoBook.stop()"
           >
             Arrêter auto-réservation
           </button>
-          <div v-if="autoBookActive" class="text-muted small mt-1">
-            En attente d'un véhicule dans {{ radius }} m...
+          <div v-if="bgAutoBook.active.value" class="text-muted small mt-1">
+            Scan #{{ bgAutoBook.scanCount.value }} — en attente d'un véhicule dans {{ radius }} m...
           </div>
-          <div v-if="autoBookError" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2 small">{{ autoBookError }}</div>
-          <div v-if="autoBookSuccess" class="alert alert-success alert-sm mt-1 mb-0 py-1 px-2 small">{{ autoBookSuccess }}</div>
+          <div v-if="bgAutoBook.error.value" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2 small">{{ bgAutoBook.error.value }}</div>
+          <div v-if="bgAutoBook.success.value" class="alert alert-success alert-sm mt-1 mb-0 py-1 px-2 small">{{ bgAutoBook.success.value }}</div>
         </div>
 
         <div class="list-group list-group-flush" style="max-height: 60vh; overflow-y: auto">
@@ -122,11 +122,13 @@ import 'leaflet/dist/leaflet.css';
 import { useGeolocation } from '@/composables/useGeolocation';
 import { useVehicles, type VehicleWithDistance } from '@/composables/useVehicles';
 import { useAuth } from '@/composables/useAuth';
-import { getLSIZones, createBooking } from '@/services/communautoDataService';
+import { useBackgroundAutoBook } from '@/composables/useBackgroundAutoBook';
+import { getLSIZones } from '@/services/communautoDataService';
 
 const { userLocation, locationError, locating } = useGeolocation();
 const { vehiclesWithDistance, fetchVehicles } = useVehicles(userLocation);
-const { isAuthenticated, wcfCookies } = useAuth();
+const { isAuthenticated } = useAuth();
+const bgAutoBook = useBackgroundAutoBook();
 
 const radius = ref(1000);
 const electricFilter = ref<'all' | 'electric' | 'gas'>('all');
@@ -168,87 +170,14 @@ function clearRefreshTimer() {
   }
 }
 
-// --- Auto-book ---
-const autoBookActive = ref(false);
-const autoBookError = ref<string | null>(null);
-const autoBookSuccess = ref<string | null>(null);
-let autoBookInProgress = false;
-
-function getUidFromCookies(): number | null {
-  const match = wcfCookies.value?.match(/uid=(\d+)/);
-  return match ? parseInt(match[1]) : null;
-}
-
-async function startAutoBook() {
-  autoBookError.value = null;
-  autoBookSuccess.value = null;
-  autoBookActive.value = true;
-  // Enable refresh if not already running
+// --- Auto-book (background-capable) ---
+async function handleStartAutoBook() {
+  const interval = refreshInterval.value > 0 ? refreshInterval.value : 15;
   if (refreshInterval.value === 0) {
-    setRefreshInterval(15);
+    setRefreshInterval(interval);
   }
-  // Refresh and try immediately
-  await fetchVehicles();
-  await tryAutoBook();
+  await bgAutoBook.start(userLocation.value, radius.value, interval, electricFilter.value);
 }
-
-function stopAutoBook() {
-  autoBookActive.value = false;
-}
-
-async function tryAutoBook() {
-  if (!autoBookActive.value || autoBookInProgress) return;
-  autoBookInProgress = true;
-  try {
-    await _tryAutoBookImpl();
-  } finally {
-    autoBookInProgress = false;
-  }
-}
-
-async function _tryAutoBookImpl() {
-  if (!autoBookActive.value) return;
-  const cars = vehiclesInRadius.value;
-  if (cars.length === 0) return;
-
-  const uid = getUidFromCookies();
-  if (!uid) {
-    autoBookError.value = 'uid introuvable dans les cookies';
-    autoBookActive.value = false;
-    return;
-  }
-
-  // Try each car in radius (closest first), skip if booking limit reached
-  for (const car of cars) {
-    try {
-      const res = await createBooking(uid, car.CarId);
-      const data = res.data?.d ?? res.data;
-      if (data?.Success) {
-        autoBookSuccess.value = `Réservé: #${car.CarNo} — ${car.CarBrand} ${car.CarModel} (${Math.round(car.distance)} m)`;
-        autoBookActive.value = false;
-        return;
-      }
-      // Booking limit reached on this car — try next one
-      if (data?.ErrorType === 3) {
-        autoBookError.value = `#${car.CarNo} limite atteinte, essai suivant...`;
-        continue;
-      }
-      // Other error — stop
-      autoBookError.value = data?.ErrorMessage || 'Réservation échouée';
-      return;
-    } catch (e: any) {
-      autoBookError.value = e?.message || 'Erreur réseau';
-      return;
-    }
-  }
-  // All cars in radius had booking limit reached
-  autoBookError.value = 'Limite atteinte sur tous les véhicules dans le rayon';
-}
-
-// Attempt auto-book whenever vehicle list updates
-watch(vehiclesWithDistance, () => {
-  if (autoBookActive.value) tryAutoBook();
-});
 
 // --- Map ---
 const vehiclesInRadius = computed(() =>
