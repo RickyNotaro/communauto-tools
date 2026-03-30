@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.3](https://github.com/RickyNotaro/communauto-tools/compare/communauto-tools-v0.0.2...communauto-tools-v0.0.3) (2026-03-30)
+
+
+### Bug Fixes
+
+* pin tar@6 for capacitor/cli to fix APK build ([8429914](https://github.com/RickyNotaro/communauto-tools/commit/8429914e6d70804f5c11c0b327fdaa97feb281e3))
+* show cookie checklist on native login and disable auto-redirect ([b1d3505](https://github.com/RickyNotaro/communauto-tools/commit/b1d35054a592963413b3f14b5e7b32e0e787ab3e))
+
 ## [0.0.2](https://github.com/RickyNotaro/communauto-tools/compare/communauto-tools-v0.0.1...communauto-tools-v0.0.2) (2026-03-30)
 
 
