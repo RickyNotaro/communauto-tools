@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/RickyNotaro/communauto-tools/compare/communauto-tools-v0.0.1...communauto-tools-v0.0.2) (2026-03-30)
+
+
+### Bug Fixes
+
+* trigger APK build from release-please after release ([6f0a290](https://github.com/RickyNotaro/communauto-tools/commit/6f0a29038494cb3e63c9a22b8eecd792d189e6d9))
+
 ## 0.0.1 (2026-03-30)
 
 
