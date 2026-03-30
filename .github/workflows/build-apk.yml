@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
     paths:
       - 'src/**'
       - 'APK/**'
@@ -10,7 +10,7 @@ on:
       - 'vite.config.ts'
       - '.github/workflows/build-apk.yml'
   pull_request:
-    branches: [master]
+    branches: [master, dev]
   workflow_call:
     inputs:
       release_tag:
