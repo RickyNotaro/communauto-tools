@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/RickyNotaro/communauto-tools/compare/communauto-tools-v0.0.3...communauto-tools-v0.0.4) (2026-03-30)
+
+
+### Miscellaneous Chores
+
+* trigger manual release as 0.0.4 ([#54](https://github.com/RickyNotaro/communauto-tools/issues/54)) ([c323b2c](https://github.com/RickyNotaro/communauto-tools/commit/c323b2c208cb7bebad1ff3099f9310a652787e48))
+
 ## [0.0.3](https://github.com/RickyNotaro/communauto-tools/compare/communauto-tools-v0.0.2...communauto-tools-v0.0.3) (2026-03-30)
 
 
