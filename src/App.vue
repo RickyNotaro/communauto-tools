@@ -8,7 +8,8 @@
         | <a href="#" @click.prevent="logout">Déconnexion</a>
       </template>
       <template v-else>
-        | <a href="#" @click.prevent="showTokenModal = true">Connexion</a>
+        | <router-link v-if="isNative" to="/native-login">Connexion</router-link>
+        <a v-else href="#" @click.prevent="showTokenModal = true">Connexion</a>
       </template>
     </span>
   </div>
@@ -76,13 +77,16 @@
 import { ref, onMounted } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 
-const { isAuthenticated, login, tryLoginFromHash, logout } = useAuth();
+const { isAuthenticated, isNative, login, tryLoginFromHash, initNativeAuth, logout } = useAuth();
 
 const showTokenModal = ref(false);
 const tokenInput = ref('');
 const cookiesInput = ref('');
 
-onMounted(() => {
+onMounted(async () => {
+  // Restore persisted auth on native
+  await initNativeAuth();
+
   // Only attempt hash-based login on the dedicated sign-in callback route
   if (window.location.pathname.endsWith('/signin-callback')) {
     tryLoginFromHash();
