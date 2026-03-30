@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [feature/androidapp, master]
+    tags: ['v*']
     paths:
       - 'src/**'
       - 'APK/**'
@@ -50,9 +51,23 @@ jobs:
         working-directory: APK/android
         run: chmod +x gradlew && ./gradlew assembleDebug
 
+      - name: Rename APK with version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          cp APK/android/app/build/outputs/apk/debug/app-debug.apk \
+             APK/android/app/build/outputs/apk/debug/communauto-tools-${VERSION}.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: communauto-tools-debug
           path: APK/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: APK/android/app/build/outputs/apk/debug/communauto-tools-*.apk
+          generate_release_notes: true
