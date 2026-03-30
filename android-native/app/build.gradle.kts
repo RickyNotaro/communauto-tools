@@ -15,9 +15,11 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // Google Maps API key — set in gradle.properties or local.properties
+        // Google Maps API key — gradle.properties, local.properties, or MAPS_API_KEY env var
         manifestPlaceholders["MAPS_API_KEY"] =
-            project.findProperty("MAPS_API_KEY") as? String ?: ""
+            project.findProperty("MAPS_API_KEY") as? String
+                ?: System.getenv("MAPS_API_KEY")
+                ?: ""
     }
 
     buildTypes {
