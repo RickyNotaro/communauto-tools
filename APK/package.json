@@ -6,6 +6,10 @@
     "build:apk": "npm run build && cd android && ./gradlew assembleDebug",
     "open": "npx cap open android"
   },
+  "overrides": {
+    "tar": "^7.5.13",
+    "brace-expansion": "^2.0.3"
+  },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
     "@capacitor/cli": "^6.0.0",
