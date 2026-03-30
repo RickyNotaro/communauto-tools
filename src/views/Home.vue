@@ -365,4 +365,60 @@
     }
   }
 }
+
+/* ── Mobile ───────────────────────────────────────── */
+@media (max-width: 576px) {
+  .hero {
+    padding: 3rem 1rem 2.5rem;
+  }
+
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-notice {
+    font-size: 0.8rem;
+    text-align: left;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .features {
+    padding: 2rem 0.5rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .how-it-works {
+    padding: 2rem 0.5rem 3rem;
+
+    h2 {
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  .step-number {
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+  }
+
+  .tech-stack {
+    padding: 1.5rem 0.5rem 3rem;
+  }
+}
 </style>
