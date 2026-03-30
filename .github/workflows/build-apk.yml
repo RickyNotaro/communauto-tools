@@ -1,0 +1,58 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [feature/androidapp, master]
+    paths:
+      - 'src/**'
+      - 'APK/**'
+      - 'package.json'
+      - 'vite.config.ts'
+      - '.github/workflows/build-apk.yml'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install APK dependencies
+        working-directory: APK
+        run: npm ci
+
+      - name: Build web assets and sync Capacitor
+        working-directory: APK
+        run: npm run build
+
+      - name: Build debug APK
+        working-directory: APK/android
+        run: chmod +x gradlew && ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: communauto-tools-debug
+          path: APK/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
