@@ -11,8 +11,11 @@ on:
       - '.github/workflows/build-apk.yml'
   pull_request:
     branches: [master]
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: false
   workflow_dispatch:
 
 jobs:
@@ -62,15 +65,16 @@ jobs:
           retention-days: 30
 
       - name: Rename APK with version
-        if: github.event_name == 'release'
+        if: inputs.release_tag
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${{ inputs.release_tag }}"
+          VERSION="${VERSION#communauto-tools-v}"
           VERSION="${VERSION#v}"
           cp APK/android/app/build/outputs/apk/debug/app-debug.apk \
              APK/android/app/build/outputs/apk/debug/communauto-tools-${VERSION}.apk
 
       - name: Upload APK to release
-        if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" APK/android/app/build/outputs/apk/debug/communauto-tools-*.apk --clobber
+        if: inputs.release_tag
+        run: gh release upload "${{ inputs.release_tag }}" APK/android/app/build/outputs/apk/debug/communauto-tools-*.apk --clobber
         env:
           GH_TOKEN: ${{ github.token }}
