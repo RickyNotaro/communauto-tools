@@ -3,9 +3,15 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(({ mode }) => ({
-  base: '/communauto-tools/',
+  base: mode === 'capacitor' ? './' : '/communauto-tools/',
   plugins: [vue()],
-  define: mode === 'ext' ? { 'import.meta.env.VITE_NO_PROXY': JSON.stringify('true') } : {},
+  define: {
+    ...(mode === 'ext' ? { 'import.meta.env.VITE_NO_PROXY': JSON.stringify('true') } : {}),
+    ...(mode === 'capacitor' ? {
+      'import.meta.env.VITE_NO_PROXY': JSON.stringify('true'),
+      'import.meta.env.VITE_CAPACITOR': JSON.stringify('true'),
+    } : {}),
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

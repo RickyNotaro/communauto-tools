@@ -11,6 +11,10 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/browser": "^8.0.2",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/preferences": "^8.0.1",
     "@popperjs/core": "^2.11.8",
     "axios": "^1.7.0",
     "bootstrap": "^5.3.3",

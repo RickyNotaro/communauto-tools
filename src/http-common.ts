@@ -1,24 +1,22 @@
 import axios from 'axios';
+import { Capacitor, CapacitorCookies } from '@capacitor/core';
 
 const TARGET_BASE = 'https://www.reservauto.net';
+const isNative = Capacitor.isNativePlatform();
 
 // VITE_NO_PROXY=true  →  skip Vite proxy in dev, behave like production
-const useDevProxy = import.meta.env.DEV && !import.meta.env.VITE_NO_PROXY;
+const useDevProxy = !isNative && import.meta.env.DEV && !import.meta.env.VITE_NO_PROXY;
 
 // Detect if the Communauto Auth Bridge extension is installed.
 // The extension injects CORS headers + cookies via declarativeNetRequest,
 // so we can call the API directly without a proxy.
+// On native, no detection needed — CapacitorHttp bypasses CORS.
 let extensionDetected = false;
-let detectionDone = useDevProxy; // skip detection when using Vite proxy
+let detectionDone = useDevProxy || isNative;
 
-const detectionPromise = !useDevProxy
+const detectionPromise = (!useDevProxy && !isNative)
   ? (async () => {
       try {
-        // Simple GET with mode: 'cors' — if the extension is injecting
-        // Access-Control-Allow-Origin headers, this will succeed.
-        // Without the extension, it fails with a CORS error.
-        // cache: 'no-store' prevents a cached corsproxy.io response from
-        // giving a false positive.
         const resp = await fetch(
           `${TARGET_BASE}/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=1&LanguageID=2`,
           { method: 'GET', mode: 'cors', cache: 'no-store' },
@@ -31,16 +29,18 @@ const detectionPromise = !useDevProxy
     })()
   : Promise.resolve();
 
-// Public API client — uses extension (direct) > Vite proxy (dev) > corsproxy.io (prod fallback).
+// Public API client.
+// Native: direct to API (CapacitorHttp handles CORS + cookies natively).
+// Web: extension (direct) > Vite proxy (dev) > corsproxy.io (prod fallback).
 const apiClient = axios.create({
-  baseURL: useDevProxy ? '/api' : TARGET_BASE,
+  baseURL: isNative ? TARGET_BASE : (useDevProxy ? '/api' : TARGET_BASE),
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
 });
 
-if (!useDevProxy) {
+if (!isNative && !useDevProxy) {
   // Wait for extension detection, then fall back to corsproxy.io if needed
   apiClient.interceptors.request.use(async (config) => {
     if (!detectionDone) await detectionPromise;
@@ -84,12 +84,29 @@ export function setRestApiToken(token: string | null) {
   }
 }
 
-// WCF cookies — sent as X-WCF-Cookie header, converted to Cookie by Vite proxy or extension
-export function setWcfCookies(cookies: string | null) {
-  if (cookies) {
-    apiClient.defaults.headers.common['X-WCF-Cookie'] = cookies;
+// WCF cookies — on native, injected into the native cookie jar.
+// On web, sent as X-WCF-Cookie header (converted to Cookie by Vite proxy or extension).
+export async function setWcfCookies(cookies: string | null) {
+  if (isNative) {
+    if (cookies) {
+      const pairs = cookies.split(';').map(s => s.trim()).filter(Boolean);
+      for (const pair of pairs) {
+        const [key, ...rest] = pair.split('=');
+        await CapacitorCookies.setCookie({
+          url: TARGET_BASE,
+          key: key.trim(),
+          value: rest.join('=').trim(),
+        });
+      }
+    } else {
+      await CapacitorCookies.clearCookies({ url: TARGET_BASE });
+    }
   } else {
-    delete apiClient.defaults.headers.common['X-WCF-Cookie'];
+    if (cookies) {
+      apiClient.defaults.headers.common['X-WCF-Cookie'] = cookies;
+    } else {
+      delete apiClient.defaults.headers.common['X-WCF-Cookie'];
+    }
   }
 }
 

@@ -1,0 +1,16 @@
+{
+  "name": "communauto-tools-android",
+  "private": true,
+  "scripts": {
+    "build": "cd .. && npx vite build --mode capacitor && cd APK && npx cap sync android",
+    "build:apk": "npm run build && cd android && ./gradlew assembleDebug",
+    "open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0",
+    "@capacitor/browser": "^6.0.0"
+  }
+}
