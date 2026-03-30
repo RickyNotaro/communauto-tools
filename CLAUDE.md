@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Conventions
+
+- Always use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages (e.g. `fix:`, `feat:`, `refactor:`, `docs:`, `chore:`, `style:`, `test:`, `ci:`, `build:`).
+
 ## Commands
 
 - **Dev server:** `npm run dev` (Vite)
