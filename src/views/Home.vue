@@ -134,7 +134,7 @@
     <footer class="home-footer">
       <p>
         Projet open-source &mdash;
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/RickyNotaro/communauto-tools" target="_blank" rel="noopener noreferrer">GitHub</a>
       </p>
     </footer>
   </div>
